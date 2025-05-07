@@ -1,0 +1,54 @@
+{
+    "codebase_search": {
+      "schema": "<codebase_search>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"Query\":{\"type\":\"string\",\"description\":\"Search query\"},\"TargetDirectories\":{\"items\":{\"type\":\"string\"},\"type\":\"array\",\"description\":\"List of absolute paths to directories to search over\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"Query\",\"TargetDirectories\"]}</codebase_search>",
+      "description": "Search across full-stack app code (frontend, backend, utils) using precise queries."
+    },
+    "command_status": {
+      "schema": "<command_status>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"CommandId\":{\"type\":\"string\",\"description\":\"ID of the command to get status for\"},\"OutputPriority\":{\"type\":\"string\",\"enum\":[\"top\",\"bottom\",\"split\"],\"description\":\"Priority for displaying command output\"},\"OutputCharacterCount\":{\"type\":\"integer\",\"description\":\"Character count to view\"},\"WaitDurationSeconds\":{\"type\":\"integer\",\"description\":\"Seconds to wait for completion\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"CommandId\",\"OutputPriority\",\"OutputCharacterCount\",\"WaitDurationSeconds\"]}</command_status>",
+      "description": "Track the status of long-running tasks like builds, type checks, or Spotify API syncs."
+    },
+    "create_memory": {
+      "schema": "<create_memory>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"Id\":{\"type\":\"string\"},\"Title\":{\"type\":\"string\"},\"Content\":{\"type\":\"string\"},\"CorpusNames\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"Tags\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"Action\":{\"type\":\"string\",\"enum\":[\"create\",\"update\",\"delete\"]},\"UserTriggered\":{\"type\":\"boolean\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"Id\",\"Title\",\"Content\",\"CorpusNames\",\"Tags\",\"Action\",\"UserTriggered\"]}</create_memory>",
+      "description": "Store key project memories such as Spotify scopes, AWS architecture, or auth flow setup."
+    },
+    "edit_file": {
+      "schema": "<edit_file>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"CodeMarkdownLanguage\":{\"type\":\"string\"},\"TargetFile\":{\"type\":\"string\"},\"Instruction\":{\"type\":\"string\"},\"TargetLintErrorIds\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"CodeEdit\":{\"type\":\"string\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"CodeMarkdownLanguage\",\"TargetFile\",\"Instruction\",\"TargetLintErrorIds\",\"CodeEdit\"]}</edit_file>",
+      "description": "Safely update Spotify API logic, UI components, or backend handlers with specific instructions."
+    },
+    "find_by_name": {
+      "schema": "<find_by_name>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"SearchDirectory\":{\"type\":\"string\"},\"Pattern\":{\"type\":\"string\"},\"Excludes\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"Type\":{\"type\":\"string\",\"enum\":[\"file\",\"directory\",\"any\"]},\"MaxDepth\":{\"type\":\"integer\"},\"Extensions\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"FullPath\":{\"type\":\"boolean\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"SearchDirectory\",\"Pattern\",\"Excludes\",\"Type\",\"MaxDepth\",\"Extensions\",\"FullPath\"]}</find_by_name>",
+      "description": "Locate frontend, backend, or utility source files by pattern or name."
+    },
+    "grep_search": {
+      "schema": "<grep_search>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"SearchPath\":{\"type\":\"string\"},\"Query\":{\"type\":\"string\"},\"MatchPerLine\":{\"type\":\"boolean\"},\"Includes\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"CaseInsensitive\":{\"type\":\"boolean\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"SearchPath\",\"Query\",\"MatchPerLine\",\"Includes\",\"CaseInsensitive\"]}</grep_search>",
+      "description": "Use ripgrep to match strings inside Spotify integration code, components, or AWS logic."
+    },
+    "list_dir": {
+      "schema": "<list_dir>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"DirectoryPath\":{\"type\":\"string\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"DirectoryPath\"]}</list_dir>",
+      "description": "List the contents of app directories (frontend, backend, config, etc.)."
+    },
+    "run_command": {
+      "schema": "<run_command>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"CommandLine\":{\"type\":\"string\"},\"Cwd\":{\"type\":\"string\"},\"Blocking\":{\"type\":\"boolean\"},\"WaitMsBeforeAsync\":{\"type\":\"integer\"},\"SafeToAutoRun\":{\"type\":\"boolean\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"CommandLine\",\"Cwd\",\"Blocking\",\"WaitMsBeforeAsync\",\"SafeToAutoRun\"]}</run_command>",
+      "description": "Run Yarn-based scripts like type checks, dev builds, migrations, or Spotify sync tasks."
+    },
+    "search_web": {
+      "schema": "<search_web>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"query\":{\"type\":\"string\"},\"domain\":{\"type\":\"string\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"query\",\"domain\"]}</search_web>",
+      "description": "Search the web for docs, examples, or troubleshooting tips (Spotify API, AWS SDK, etc.)."
+    },
+    "suggested_responses": {
+      "schema": "<suggested_responses>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"Suggestions\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"Suggestions\"]}</suggested_responses>",
+      "description": "Offer suggested yes/no responses or task options to streamline decisions."
+    },
+    "view_code_item": {
+      "schema": "<view_code_item>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"File\":{\"type\":\"string\"},\"NodePath\":{\"type\":\"string\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"NodePath\"]}</view_code_item>",
+      "description": "View specific functions, handlers, or components in your Spotify/AWS app code."
+    },
+    "view_file": {
+      "schema": "<view_file>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"AbsolutePath\":{\"type\":\"string\"},\"StartLine\":{\"type\":\"integer\"},\"EndLine\":{\"type\":\"integer\"},\"IncludeSummaryOfOtherLines\":{\"type\":\"boolean\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"AbsolutePath\",\"StartLine\",\"EndLine\",\"IncludeSummaryOfOtherLines\"]}</view_file>",
+      "description": "Preview sections of your codebase with optional summarization context."
+    },
+    "write_to_file": {
+      "schema": "<write_to_file>{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"TargetFile\":{\"type\":\"string\"},\"CodeContent\":{\"type\":\"string\"},\"EmptyFile\":{\"type\":\"boolean\"}},\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"TargetFile\",\"CodeContent\",\"EmptyFile\"]}</write_to_file>",
+      "description": "Safely create or overwrite frontend, backend, or integration code files."
+    }
+  }
