@@ -3,10 +3,11 @@ import { TRPCError } from "@trpc/server";
 export interface SpotifyArtist {
   id: string;
   name: string;
+  images: { url: string; height: number; width: number }[];
 }
 
 interface FollowedArtistsResponse {
-  artists: { items: SpotifyArtist[] };
+  artists: { items: SpotifyArtist[]; next: string | null };
 }
 interface PlaylistsResponse {
   items: { id: string }[];
@@ -27,10 +28,15 @@ export class SpotifyService {
   }
 
   async getFollowedArtists(): Promise<SpotifyArtist[]> {
-    const data = await this.fetchJson<FollowedArtistsResponse>(
-      "https://api.spotify.com/v1/me/following?type=artist"
-    );
-    return data.artists.items;
+    const limit = 50;
+    const artists: SpotifyArtist[] = [];
+    let nextUrl: string | null = `https://api.spotify.com/v1/me/following?type=artist&limit=${limit}`;
+    while (nextUrl) {
+      const data: FollowedArtistsResponse = await this.fetchJson<FollowedArtistsResponse>(nextUrl);
+      artists.push(...data.artists.items);
+      nextUrl = data.artists.next;
+    }
+    return artists;
   }
 
   async getPlaylistArtists(): Promise<SpotifyArtist[]> {

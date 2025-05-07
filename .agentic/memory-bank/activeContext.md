@@ -1,6 +1,6 @@
 Active Context: Project State Synchronization
 
-- Last Updated: 2025-05-07T14:27:39-04:00
+- Last Updated: 2025-05-07T14:53:36-04:00
 - Current focus: aligning scaffold with artist follower feature
 - Completed:
   - Scaffolded Next.js + TypeScript + Tailwind + tRPC + Prisma via create-t3-app
@@ -13,5 +13,14 @@ Active Context: Project State Synchronization
   - Configured NextAuth authentication
   - Built React components: artist lists, multi-select, follow button, real-time updates
   - Styled Home page with Spotify green-black gradient and updated layout
+  - Implemented SpotifyService pagination for full followed artists
+  - ArtistManager card UI: images, clickable selection, hide/unfollow buttons, floating footer
+  - Two-column grid layout for sections
+  - Follow X Selected button styling enhanced
+  - Animate card transitions between follow/hide actions
+  - Changed ArtistManager grids to one card per row per section
+  - Enabled two-line wrap clamp on artist names
 - Next:
-  - Polish UI styling across pages and test user flows
+  - Replace <img> with optimized <Image> components
+  - End-to-end testing of user flows
+  - Accessibility and performance tweaks
