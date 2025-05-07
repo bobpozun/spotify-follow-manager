@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
+import { env } from "@/env";
+import SpotifyProvider from "next-auth/providers/spotify";
 
 import { db } from "@/server/db";
 
@@ -14,15 +15,10 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
     } & DefaultSession["user"];
+    accessToken: string;
+    refreshToken: string;
   }
-
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
 }
 
 /**
@@ -30,9 +26,17 @@ declare module "next-auth" {
  *
  * @see https://next-auth.js.org/configuration/options
  */
-export const authConfig = {
+export const authConfig: NextAuthConfig = {
+  secret: env.AUTH_SECRET,
+  session: { strategy: "jwt" },
   providers: [
-    DiscordProvider,
+    SpotifyProvider({
+      clientId: env.SPOTIFY_CLIENT_ID,
+      clientSecret: env.SPOTIFY_CLIENT_SECRET,
+      authorization: {
+        params: { scope: "user-follow-read playlist-read-private user-follow-modify" },
+      },
+    }),
     /**
      * ...add more providers here.
      *
@@ -45,12 +49,23 @@ export const authConfig = {
   ],
   adapter: PrismaAdapter(db),
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    async jwt({ token, account }) {
+      if (account) {
+        token.accessToken = account.access_token!;
+        token.refreshToken = account.refresh_token!;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.sub!,
+        },
+        accessToken: token.accessToken,
+        refreshToken: token.refreshToken,
+      };
+    },
   },
 } satisfies NextAuthConfig;
