@@ -40,13 +40,13 @@ export class SpotifyService {
   }
 
   async getPlaylistArtists(): Promise<SpotifyArtist[]> {
-    const playlistsData = await this.fetchJson<PlaylistsResponse>(
+    const playlistsData: PlaylistsResponse = await this.fetchJson<PlaylistsResponse>(
       "https://api.spotify.com/v1/me/playlists"
     );
     const artistSet = new Set<string>();
     for (const playlist of playlistsData.items) {
       try {
-        const tracksData = await this.fetchJson<PlaylistTracksResponse>(
+        const tracksData: PlaylistTracksResponse = await this.fetchJson<PlaylistTracksResponse>(
           `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`
         );
         tracksData.items.forEach(item => item.track.artists.forEach(a => artistSet.add(a.id)));
@@ -59,10 +59,10 @@ export class SpotifyService {
     for (let i = 0; i < allIds.length; i += 50) {
       const batch = allIds.slice(i, i + 50);
       try {
-        const { artists } = await this.fetchJson<{ artists: SpotifyArtist[] }>(
+        const batchResponse: { artists: SpotifyArtist[] } = await this.fetchJson<{ artists: SpotifyArtist[] }>(
           `https://api.spotify.com/v1/artists?ids=${batch.join(",")}`
         );
-        artistDetails.push(...artists);
+        artistDetails.push(...batchResponse.artists);
       } catch {
         // skip batch on error
       }
