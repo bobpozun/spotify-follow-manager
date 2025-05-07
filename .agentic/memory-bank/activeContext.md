@@ -1,6 +1,6 @@
 Active Context: Project State Synchronization
 
-- Last Updated: 2025-05-07T14:05:21-04:00
+- Last Updated: 2025-05-07T14:27:39-04:00
 - Current focus: aligning scaffold with artist follower feature
 - Completed:
   - Scaffolded Next.js + TypeScript + Tailwind + tRPC + Prisma via create-t3-app
@@ -11,6 +11,7 @@ Active Context: Project State Synchronization
   - Created SpotifyService for API abstraction & lint fixes
   - Integrated SpotifyService into tRPC artist routers
   - Configured NextAuth authentication
+  - Built React components: artist lists, multi-select, follow button, real-time updates
+  - Styled Home page with Spotify green-black gradient and updated layout
 - Next:
-  - Build React components: artist lists, multi-select, follow button, real-time updates
-  - Update README and docs to reflect artist follower functionality
+  - Polish UI styling across pages and test user flows

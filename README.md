@@ -1,13 +1,14 @@
-# Spotify Playlist Follower
+# Spotify Artist Follower
 
-Spotify Playlist Follower is a web application that automatically follows playlists on behalf of authenticated users. It is built with the T3 Stack and the Spotify Web API.
+Spotify Artist Follower is a web application that lets authenticated users view artists they follow, discover unique artists in their playlists, and follow them in bulk. Built with the T3 Stack and the Spotify Web API.
 
 ## Features
 
-- Authenticate with Spotify via NextAuth.js using OAuth 2.0
-- Browse and search Spotify playlists
-- Follow playlists programmatically
-- View your followed playlists dashboard
+- Authenticate with Spotify via NextAuth.js (OAuth 2.0)
+- Browse artists you already follow
+- Discover unique artists from your playlists
+- Multi-select and follow artists in bulk
+- Real-time list updates
 - Schedule automated follow tasks (coming soon)
 
 ## Technology Stack
@@ -15,7 +16,7 @@ Spotify Playlist Follower is a web application that automatically follows playli
 - [Next.js](https://nextjs.org)
 - [NextAuth.js](https://next-auth.js.org)
 - [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
+- [React Query](https://tanstack.com/query/latest)
 - [Tailwind CSS](https://tailwindcss.com)
 - [tRPC](https://trpc.io)
 
@@ -33,7 +34,7 @@ Spotify Playlist Follower is a web application that automatically follows playli
    # SPOTIFY_CLIENT_ID=
    # SPOTIFY_CLIENT_SECRET=
    # NEXTAUTH_URL=http://localhost:3000
-   # DATABASE_URL=postgresql://<user>:<pass>@localhost:5432/spotify_playlist_follower
+   # DATABASE_URL=postgresql://<user>:<pass>@localhost:5432/spotify_artist_follower
    # AUTH_SECRET=<random_string>
    ```
 
