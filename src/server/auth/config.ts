@@ -34,6 +34,7 @@ export const authConfig: NextAuthConfig = {
       clientId: env.SPOTIFY_CLIENT_ID,
       clientSecret: env.SPOTIFY_CLIENT_SECRET,
       authorization: {
+        url: "https://accounts.spotify.com/authorize",
         params: { scope: "user-follow-read playlist-read-private user-follow-modify" },
       },
     }),
