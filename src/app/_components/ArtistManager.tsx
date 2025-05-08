@@ -36,7 +36,7 @@ export function ArtistManager() {
     }
   }, [errorFollowed, errorPlaylist]);
 
-  if (isLoadingFollowed || isLoadingPlaylist) return <p>Loading artists...</p>;
+  if (isLoadingFollowed || isLoadingPlaylist) return <p className="text-xl font-semibold text-white mb-2">Loading artists...</p>;
 
   const followable = playlist
     .filter((a) => !followed.some((f) => f.id === a.id))

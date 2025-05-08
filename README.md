@@ -34,7 +34,7 @@ Spotify Follow Manager is a web application that lets authenticated users view a
    # SPOTIFY_CLIENT_ID=
    # SPOTIFY_CLIENT_SECRET=
    # NEXTAUTH_URL=http://localhost:3000
-   # DATABASE_URL=postgresql://<user>:<pass>@localhost:5432/spotify_artist_follower
+   # DATABASE_URL=postgresql://<user>:<pass>@localhost:5432/spotify_follow_manager
    # AUTH_SECRET=<random_string>
    ```
 

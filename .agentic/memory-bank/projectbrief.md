@@ -1,6 +1,6 @@
-Project Prompt: Spotify Playlist Follower – TypeScript AWS Full Stack App
+Project Prompt: Spotify Follow Manager – TypeScript AWS Full Stack App
 
-Please update the spotify-playlist-follower project with the following goals:
+Please update the spotify-follow-manager project with the following goals:
 
 ## Current Architecture
 
@@ -28,7 +28,7 @@ Goals & Features:
 	•	Click a “Follow Artists” button to follow all selected artists at once.
 	•	Automatically update the view so followed artists move to the “currently following” section after successful follow.
 	4.	Design & UI:
-	•	Build as a single-page app (SPA) using the same framework as aio-baby-tracker (React + Tailwind + tRPC + Prisma).
+	•	Build as a single-page app (SPA) using (React + Tailwind + tRPC + Prisma).
 	•	Use a Spotify-inspired color palette (deep blacks, greens, neon accents).
 	•	Design stylish artist cards with good use of imagery, hierarchy, and hover effects.
 	•	Maintain a clean, responsive layout – prioritize usability and clarity.
