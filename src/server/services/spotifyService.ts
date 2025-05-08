@@ -21,6 +21,9 @@ export class SpotifyService {
 
   private async fetchJson<T>(url: string): Promise<T> {
     const res = await fetch(url, { headers: { Authorization: `Bearer ${this.accessToken}` } });
+    if (res.status === 401) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "Spotify API unauthorized. Please reauthenticate." });
+    }
     if (!res.ok) {
       throw new TRPCError({ code: "BAD_REQUEST", message: `Spotify API error: ${res.statusText}` });
     }
@@ -32,9 +35,9 @@ export class SpotifyService {
     const artists: SpotifyArtist[] = [];
     let nextUrl: string | null = `https://api.spotify.com/v1/me/following?type=artist&limit=${limit}`;
     while (nextUrl) {
-      const data: FollowedArtistsResponse = await this.fetchJson<FollowedArtistsResponse>(nextUrl);
-      artists.push(...data.artists.items);
-      nextUrl = data.artists.next;
+      const page: FollowedArtistsResponse = await this.fetchJson<FollowedArtistsResponse>(nextUrl);
+      artists.push(...page.artists.items);
+      nextUrl = page.artists.next;
     }
     return artists;
   }
@@ -71,9 +74,11 @@ export class SpotifyService {
   }
 
   async followArtist(artistId: string): Promise<{ success: boolean }> {
-    await this.fetchJson<void>(
-      `https://api.spotify.com/v1/me/following?type=artist&ids=${artistId}`
+    const res = await fetch(
+      `https://api.spotify.com/v1/me/following?type=artist&ids=${artistId}`,
+      { method: "PUT", headers: { Authorization: `Bearer ${this.accessToken}` } }
     );
+    if (!res.ok) throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to follow artist" });
     return { success: true };
   }
 

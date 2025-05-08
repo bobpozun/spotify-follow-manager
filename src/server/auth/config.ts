@@ -18,6 +18,48 @@ declare module "next-auth" {
     } & DefaultSession["user"];
     accessToken: string;
     refreshToken: string;
+    error?: string;
+  }
+}
+
+interface SpotifyToken extends Record<string, unknown> {
+  accessToken?: string;
+  refreshToken?: string;
+  accessTokenExpires?: number;
+  error?: string;
+}
+
+/**
+ * Helper to refresh Spotify access tokens
+ */
+async function refreshAccessToken(token: SpotifyToken): Promise<SpotifyToken> {
+  try {
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization:
+          "Basic " + Buffer.from(`${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`).toString("base64"),
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken!,
+      }),
+    });
+    const data: unknown = await response.json();
+    if (!response.ok) {
+      throw new Error(`Spotify refresh failed: ${JSON.stringify(data)}`);
+    }
+    const refreshed = data as { access_token: string; expires_in: number; refresh_token?: string };
+    return {
+      ...token,
+      accessToken: refreshed.access_token,
+      accessTokenExpires: Date.now() + refreshed.expires_in * 1000,
+      refreshToken: refreshed.refresh_token ?? token.refreshToken,
+    };
+  } catch (error: unknown) {
+    console.error("Error refreshing access token", error);
+    return { ...token, error: "RefreshAccessTokenError" };
   }
 }
 
@@ -29,6 +71,7 @@ declare module "next-auth" {
 export const authConfig: NextAuthConfig = {
   secret: env.AUTH_SECRET,
   session: { strategy: "jwt" },
+  pages: { signIn: "/", signOut: "/", error: "/" },
   providers: [
     SpotifyProvider({
       clientId: env.SPOTIFY_CLIENT_ID,
@@ -51,11 +94,21 @@ export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(db),
   callbacks: {
     async jwt({ token, account }) {
+      // Initial sign-in
       if (account) {
-        token.accessToken = account.access_token!;
-        token.refreshToken = account.refresh_token!;
+        return {
+          ...token,
+          accessToken: account.access_token!,
+          refreshToken: account.refresh_token!,
+          accessTokenExpires: Date.now() + account.expires_in! * 1000,
+        };
       }
-      return token;
+      // Return previous token if not expired
+      if (Date.now() < (token.accessTokenExpires as number)) {
+        return token;
+      }
+      // Access token expired, try to refresh
+      return await refreshAccessToken(token);
     },
     async session({ session, token }) {
       return {
@@ -66,6 +119,7 @@ export const authConfig: NextAuthConfig = {
         },
         accessToken: token.accessToken,
         refreshToken: token.refreshToken,
+        error: token.error,
       };
     },
   },

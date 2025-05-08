@@ -1,6 +1,6 @@
-# Spotify Artist Follower
+# Spotify Follow Manager
 
-Spotify Artist Follower is a web application that lets authenticated users view artists they follow, discover unique artists in their playlists, and follow them in bulk. Built with the T3 Stack and the Spotify Web API.
+Spotify Follow Manager is a web application that lets authenticated users view artists they follow, discover unique artists in their playlists, and follow them in bulk. Built with the T3 Stack and the Spotify Web API.
 
 ## Features
 
