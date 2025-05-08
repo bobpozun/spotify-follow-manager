@@ -12,6 +12,7 @@ export function ArtistManager() {
   const { data: playlist = [], isLoading: isLoadingPlaylist, error: errorPlaylist } = api.artist.getPlaylistArtists.useQuery();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
+  const [unfollowingIds, setUnfollowingIds] = useState<string[]>([]);
   const followMutation = api.artist.followArtist.useMutation({
     onSuccess: async () => {
       await Promise.all([
@@ -22,8 +23,15 @@ export function ArtistManager() {
     },
   });
   const unfollowMutation = api.artist.unfollowArtist.useMutation({
-    onSuccess: async () => {
+    onMutate: (variables) => {
+      setUnfollowingIds(prev => [...prev, variables.artistId]);
+    },
+    onSuccess: async (_data, variables) => {
       await utils.artist.getFollowedArtists.invalidate();
+      setUnfollowingIds(prev => prev.filter(id => id !== variables.artistId));
+    },
+    onError: (_error, variables) => {
+      setUnfollowingIds(prev => prev.filter(id => id !== variables.artistId));
     },
   });
 
@@ -72,10 +80,10 @@ export function ArtistManager() {
                   </span>
                   <button
                     onClick={() => unfollowMutation.mutate({ artistId: artist.id })}
-                    disabled={unfollowMutation.status === "pending"}
-                    className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 disabled:opacity-50"
+                    disabled={unfollowingIds.includes(artist.id)}
+                    className="text-sm bg-[#B3B3B3] text-[black] px-3 py-1 rounded hover:bg-gray-300 disabled:opacity-50"
                   >
-                    {unfollowMutation.status === "pending"
+                    {unfollowingIds.includes(artist.id)
                       ? "Unfollowing..."
                       : "Unfollow"}
                   </button>
@@ -85,7 +93,7 @@ export function ArtistManager() {
           </div>
         </section>
         <section>
-          <h2 className="text-xl font-semibold text-white mb-2">Artists in Your Playlists</h2>
+          <h2 className="text-xl font-semibold text-white mb-2">Playlist Artists - Tap to Follow</h2>
           {followable.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
               <AnimatePresence>
@@ -124,7 +132,7 @@ export function ArtistManager() {
                         e.stopPropagation();
                         setHiddenIds((h) => [...h, artist.id]);
                       }}
-                      className="text-sm text-gray-300 hover:text-white"
+                      className="text-sm text-[black] hover:text-white"
                     >
                       Hide
                     </button>
@@ -136,7 +144,7 @@ export function ArtistManager() {
             <p className="text-gray-400">No new artists to follow</p>
           )}
           {selectedIds.length > 0 && (
-            <footer className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white px-6 py-3 rounded-full shadow-lg">
+            <footer className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-black px-6 py-3 rounded-full shadow-lg">
               <button
                 onClick={() =>
                   selectedIds.forEach((id) => followMutation.mutate({ artistId: id }))

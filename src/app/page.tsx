@@ -28,7 +28,7 @@ export default async function Home() {
           <AuthButton />
         </nav>
       )}
-      <main className="pt-16 flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#1DB954] to-black text-white">
+      <main className={`pt-16 flex min-h-screen flex-col items-center justify-center ${user ? 'bg-[#1DB954]' : 'bg-gradient-to-b from-[#1DB954] to-black'} text-white`}>
         <div className="container flex flex-col items-center justify-center gap-4 px-4 py-16">
           {!user && (
             <>

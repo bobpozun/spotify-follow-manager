@@ -9,7 +9,6 @@ Spotify Follow Manager is a web application that lets authenticated users view a
 - Discover unique artists from your playlists
 - Multi-select and follow artists in bulk
 - Real-time list updates
-- Schedule automated follow tasks (coming soon)
 
 ## Technology Stack
 
