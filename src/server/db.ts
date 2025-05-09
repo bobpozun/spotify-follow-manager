@@ -1,17 +1,66 @@
 import { PrismaClient } from "@prisma/client";
-
 import { env } from "@/env";
+import { getDatabaseCredentials } from "./services/secretsService";
 
-const createPrismaClient = () =>
-  new PrismaClient({
-    log:
-      env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  });
+// Initialize Prisma client with database credentials from AWS Secrets Manager
+async function initPrismaClient() {
+  try {
+    // If we're in a production environment, try to get credentials from AWS Secrets Manager
+    if (env.NODE_ENV === "production" || env.DATABASE_URL.includes('secretsmanager')) {
+      // Get the actual connection string with resolved secrets
+      const connectionString = await getDatabaseCredentials();
+      
+      return new PrismaClient({
+        datasources: {
+          db: {
+            url: connectionString,
+          },
+        },
+        log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+      });
+    } else {
+      // For local development without secrets manager
+      return new PrismaClient({
+        log: ["query", "error", "warn"],
+      });
+    }
+  } catch (error) {
+    console.error("Failed to initialize Prisma client with AWS credentials:", error);
+    
+    // Fallback to environment variable if available
+    return new PrismaClient({
+      log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    });
+  }
+}
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: ReturnType<typeof createPrismaClient> | undefined;
+  prisma: PrismaClient | undefined;
+  prismaPromise: Promise<PrismaClient> | undefined;
 };
 
-export const db = globalForPrisma.prisma ?? createPrismaClient();
+// Create a promise for the Prisma client initialization
+if (!globalForPrisma.prismaPromise) {
+  globalForPrisma.prismaPromise = initPrismaClient();
+}
 
-if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+// Export a function to get the database connection
+export async function getDb(): Promise<PrismaClient> {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = await globalForPrisma.prismaPromise;
+  }
+  return globalForPrisma.prisma;
+}
+
+// For backward compatibility - this will initialize the client on first use
+export const db = globalForPrisma.prisma ?? 
+  new PrismaClient({
+    log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+  });
+
+// Initialize the global instance in development
+if (env.NODE_ENV !== "production" && !globalForPrisma.prisma) {
+  initPrismaClient().then(client => {
+    globalForPrisma.prisma = client;
+  });
+}

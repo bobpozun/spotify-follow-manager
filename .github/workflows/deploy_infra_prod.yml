@@ -1,0 +1,35 @@
+name: Deploy Infrastructure (Prod)
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      ENV_NAME: ${{ vars.ENV_NAME }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Deploy CDK Stack
+        id: deploy
+        run: yarn infra:deploy:prod --outputs-file infra-outputs.json
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}

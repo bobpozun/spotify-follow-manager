@@ -1,0 +1,19 @@
+version: 1
+applications:
+  - appRoot: '.'  # root of repo containing package.json and next.config.js
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - yarn install
+        build:
+          commands:
+            - yarn build
+            - yarn export
+      artifacts:
+        baseDirectory: out
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*

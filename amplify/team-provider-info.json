@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-spotifyfollowmanager-dev-bd36e-authRole",
+      "UnauthRoleArn": "arn:aws:iam::638709100606:role/amplify-spotifyfollowmanager-dev-bd36e-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::638709100606:role/amplify-spotifyfollowmanager-dev-bd36e-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-spotifyfollowmanager-dev-bd36e-deployment",
+      "UnauthRoleName": "amplify-spotifyfollowmanager-dev-bd36e-unauthRole",
+      "StackName": "amplify-spotifyfollowmanager-dev-bd36e",
+      "StackId": "arn:aws:cloudformation:us-east-2:638709100606:stack/amplify-spotifyfollowmanager-dev-bd36e/28600fe0-2c2d-11f0-8116-0273df51cd65",
+      "AmplifyAppId": "d315zq9arpv8vk"
+    }
+  }
+}

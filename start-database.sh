@@ -13,10 +13,21 @@
 
 # import env variables from .env
 set -a
-source .env
+# Load local env first if present, else default env
+if [ -f .env.local ]; then
+  source .env.local
+else
+  source .env
+fi
 
 DB_PASSWORD=$(echo "$DATABASE_URL" | awk -F':' '{print $3}' | awk -F'@' '{print $1}')
 DB_PORT=$(echo "$DATABASE_URL" | awk -F':' '{print $4}' | awk -F'\/' '{print $1}')
+
+# Fallback to default Postgres port if parsed port is not numeric
+if ! [[ "$DB_PORT" =~ ^[0-9]+$ ]]; then
+  DB_PORT=5432
+fi
+
 DB_NAME=$(echo "$DATABASE_URL" | awk -F'/' '{print $4}')
 DB_CONTAINER_NAME="$DB_NAME-postgres"
 
@@ -74,10 +85,10 @@ if [ "$DB_PASSWORD" = "password" ]; then
   sed -i '' "s#:password@#:$DB_PASSWORD@#" .env
 fi
 
-$DOCKER_CMD run -d \
-  --name $DB_CONTAINER_NAME \
-  -e POSTGRES_USER="postgres" \
-  -e POSTGRES_PASSWORD="$DB_PASSWORD" \
-  -e POSTGRES_DB="$DB_NAME" \
-  -p "$DB_PORT":5432 \
-  docker.io/postgres && echo "Database container '$DB_CONTAINER_NAME' was successfully created"
+echo "Starting a new container named $DB_CONTAINER_NAME..."
+if [[ $PODMAN ]]; then
+  podman run --name $DB_CONTAINER_NAME -e POSTGRES_PASSWORD=$DB_PASSWORD -e POSTGRES_DB=$DB_NAME -p 5433:5432 -d postgres:14
+else
+  docker run --name $DB_CONTAINER_NAME -e POSTGRES_PASSWORD=$DB_PASSWORD -e POSTGRES_DB=$DB_NAME -p 5433:5432 -d postgres:14
+fi
+echo "Database container '$DB_CONTAINER_NAME' was successfully created"

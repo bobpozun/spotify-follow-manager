@@ -1,0 +1,203 @@
+import * as path from 'path';
+import * as cdk from 'aws-cdk-lib';
+import type { Construct } from 'constructs';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as amplify from 'aws-cdk-lib/aws-amplify';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as rds from 'aws-cdk-lib/aws-rds';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as fs from 'fs';
+
+export class SpotifyInfraStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // Determine environment name for resource naming
+    const envName = String(process.env.ENV_NAME ?? 'dev');
+    
+    // Create VPC for database resources
+    const vpc = new ec2.Vpc(this, `DatabaseVpc${envName}`, {
+      maxAzs: 2,
+      natGateways: 0, // Use lower cost option for dev environments
+      subnetConfiguration: [
+        {
+          name: 'isolated',
+          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+          cidrMask: 24,
+        },
+        {
+          name: 'public',
+          subnetType: ec2.SubnetType.PUBLIC,
+          cidrMask: 24,
+        }
+      ],
+    });
+    
+    // Security group for database instance
+    const dbSecurityGroup = new ec2.SecurityGroup(this, `DbSecurityGroup${envName}`, {
+      vpc,
+      description: `Security group for ${envName} database access`,
+      allowAllOutbound: true,
+    });
+    
+    // Allow database connections from anywhere (restrict this for production)
+    dbSecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(5432),
+      `Allow PostgreSQL from anywhere for ${envName}`
+    );
+    
+    // Generate a random password for the database
+    const databaseCredentials = new secretsmanager.Secret(this, `DbCredentials${envName}`, {
+      secretName: `spotify-follow-manager-${envName}-db-credentials`,
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify({ username: 'postgres' }),
+        generateStringKey: 'password',
+        excludePunctuation: true,
+        passwordLength: 16,
+      },
+    });
+    
+    // Store application secrets in Secrets Manager
+    const appSecrets = new secretsmanager.Secret(this, `AppSecrets${envName}`, {
+      secretName: `spotify-follow-manager-${envName}-app-secrets`,
+      secretStringValue: cdk.SecretValue.unsafePlainText(JSON.stringify({
+        SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID ?? '',
+        SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET ?? '',
+        AUTH_SECRET: process.env.AUTH_SECRET ?? '',
+        GH_TOKEN: process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN ?? ''
+      })),
+    });
+    
+    // Create RDS PostgreSQL instance
+    const dbInstance = new rds.DatabaseInstance(this, `Database${envName}`, {
+      engine: rds.DatabaseInstanceEngine.postgres({ version: rds.PostgresEngineVersion.VER_14 }),
+      credentials: rds.Credentials.fromSecret(databaseCredentials),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO), // Free tier eligible
+      vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED
+      },
+      securityGroups: [dbSecurityGroup],
+      databaseName: 'spotifyFollowManager',
+      allocatedStorage: 20,
+      maxAllocatedStorage: 100,
+      storageType: rds.StorageType.GP2,
+      deletionProtection: false, // Set to true for production
+      backupRetention: cdk.Duration.days(7),
+      deleteAutomatedBackups: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // Change to RETAIN for production
+      publiclyAccessible: true, // Makes the DB accessible from outside the VPC
+    });
+    
+    // Output the database connection information
+    const dbConnectionString = `postgresql://postgres:${databaseCredentials.secretValueFromJson('password').toString()}@${dbInstance.dbInstanceEndpointAddress}:${dbInstance.dbInstanceEndpointPort}/spotifyFollowManager`;
+    
+    // Output the constructed RDS connection string
+    new cdk.CfnOutput(this, `DatabaseURL${envName}`, {
+      value: dbConnectionString,
+      description: 'PostgreSQL connection string for the application',
+    });
+    
+    // Store the database credentials in Secrets Manager
+    new cdk.CfnOutput(this, `DatabaseSecretArn${envName}`, {
+      value: databaseCredentials.secretArn,
+      description: 'ARN of the secret containing database credentials',
+    });
+    
+    // Output the app secrets ARN
+    new cdk.CfnOutput(this, `AppSecretArn${envName}`, {
+      value: appSecrets.secretArn,
+      description: 'ARN of the secret containing application credentials',
+    });
+
+    // Enable GitHub OIDC for CI/CD
+    const oidcProvider = new iam.OpenIdConnectProvider(this, 'GitHubOidcProvider', {
+      url: 'https://token.actions.githubusercontent.com',
+      clientIds: ['sts.amazonaws.com'],
+    });
+
+    const ghActionsRole = new iam.Role(this, `GitHubActionsRole${envName}`, {
+      assumedBy: new iam.FederatedPrincipal(
+        oidcProvider.openIdConnectProviderArn,
+        {
+          StringEquals: {
+            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+            'token.actions.githubusercontent.com:sub': 'repo:bobpozun/spotify-follow-manager:ref:refs/heads/main',
+          },
+        },
+        'sts:AssumeRole'
+      ),
+      roleName: `spotify-actions-deploy-${envName}`,
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess-Amplify')],
+    });
+
+    new cdk.CfnOutput(this, `AWS_ROLE_TO_ASSUME`, {
+      value: ghActionsRole.roleArn,
+      description: 'OIDC IAM role ARN for GitHub Actions',
+    });
+
+    // Validate GitHub OAuth token for Amplify
+    const oauthToken = process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
+    if (!oauthToken) {
+      throw new Error('Missing GH_TOKEN or GITHUB_TOKEN environment variable for Amplify App creation');
+    }
+    // Create Amplify App first without environment variables
+    const app = new amplify.CfnApp(this, `AmplifyApp${envName}`, {
+      name: `spotify-follow-manager-${envName}`,
+      repository: 'https://github.com/bobpozun/spotify-follow-manager',
+      accessToken: oauthToken,
+      buildSpec: fs.readFileSync(path.join(__dirname, '../../amplify.yml'), 'utf-8'),
+      customRules: [{ source: '</^[^.]+$|\.(?!(js|css|png|jpg|svg|json)$)([^.]+$)/>', target: '/index.html', status: '200' }],
+    });
+    
+    // After app is created, get app domain
+    const appId = app.attrAppId;
+    const appDomain = `${appId}.amplifyapp.com`; 
+    
+    // Create the environment variables separately to avoid circular reference
+    // Use actual branch environment variables with the new RDS database connection
+    const branch = new amplify.CfnBranch(this, `MainBranch${envName}`, {
+      appId: appId,
+      branchName: 'main',
+      environmentVariables: [
+        {
+          name: 'AUTH_SECRET',
+          value: process.env.AUTH_SECRET ?? ''
+        },
+        {
+          name: 'SPOTIFY_CLIENT_ID',
+          value: process.env.SPOTIFY_CLIENT_ID ?? ''
+        },
+        {
+          name: 'SPOTIFY_CLIENT_SECRET',
+          value: process.env.SPOTIFY_CLIENT_SECRET ?? ''
+        },
+        {
+          name: 'DATABASE_URL',
+          value: dbConnectionString
+        },
+        {
+          name: 'NEXTAUTH_URL',
+          value: `https://main.${appDomain}`
+        },
+        {
+          name: 'ENV_NAME',
+          value: envName
+        }
+      ]
+    });
+
+    // Output Amplify App ID for CLI usage
+    new cdk.CfnOutput(this, `AMPLIFY_APP_ID`, {
+      value: app.attrAppId,
+      description: 'Amplify App ID',
+    });
+    
+    // Also output branch URL for convenience
+    new cdk.CfnOutput(this, `AmplifyBranchURL${envName}`, {
+      value: `https://main.${appDomain}`,
+      description: 'Amplify App Branch URL',
+    });
+  }
+}

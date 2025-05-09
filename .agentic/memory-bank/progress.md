@@ -1,6 +1,6 @@
-Progress: Memory Bank Synchronization
+Progress: AWS Secrets Manager Integration
 
-- Last Updated: 2025-05-07T22:57:50-04:00
+- Last Updated: 2025-05-08T16:55:00-04:00
 - Completed:
   - Parsed `.agentic` configuration and environment settings
   - Created memories for tech stack and environment
@@ -15,3 +15,16 @@ Progress: Memory Bank Synchronization
   - Modified ArtistManager buttons: 'Hide' text to #B3B3B3, 'Unfollow' button background to #B3B3B3 and text to #1DB954
   - Renamed repository to `spotify-follow-manager`; updated `package.json`, README.md, and `.env`
   - Updated Home page background to solid #1DB954 when signed in
+  - Loaded `.env` in CDK CLI (bin/infra.ts) and `infra-stack.ts` to use `AMPLIFY_ENV_NAME` for environment contexts
+  - Updated CDK stack to output Amplify App ID and provided `jq` retrieval instructions
+  - Clarified README for setting/passing `AMPLIFY_ENV_NAME` and retrieving Amplify App ID
+  - Refactored package.json scripts to use `ENV_NAME` instead of `AMPLIFY_ENV_NAME`
+  - Updated all scripts to use dotenv's `-o` flag to ensure command-line variables take precedence
+  - Created separate workflow files for dev/prod environments 
+  - Simplified README with clear deployment instructions
+  - Implemented AWS Secrets Manager for credential storage in infrastructure stack
+  - Added CfnOutput for both database and application secret ARNs
+  - Created secretsService.ts with robust error handling and type safety
+  - Updated GitHub Actions workflow to fetch secrets from AWS Secrets Manager
+  - Added AWS Secrets Manager documentation to README.md
+  - Fixed TypeScript issues related to AWS SDK types using eslint comments
