@@ -6,23 +6,23 @@ applications:
         preBuild:
           commands:
             # Disable SSM Parameter Store warnings
-            - export AMPLIFY_DISABLE_SSM=true
+            - 'export AMPLIFY_DISABLE_SSM=true'
             # Install dependencies
-            - yarn install
+            - 'yarn install'
             # Ensure AWS CLI has proper region
-            - export AWS_REGION=${AWS_REGION:-us-east-2}
-            - echo "AWS Region: $AWS_REGION"
+            - 'export AWS_REGION=${AWS_REGION:-us-east-2}'
+            - 'echo "AWS Region: $AWS_REGION"'
             # Print env info for debugging (excluding sensitive values)
-            - env | grep -v -E "SECRET|TOKEN|PASSWORD" | sort
+            - 'env | grep -v -E "SECRET|TOKEN|PASSWORD" | sort'
         build:
           commands:
             # Explicitly set NODE_ENV for the build
-            - export NODE_ENV=production
+            - 'export NODE_ENV=production'
             # Print app ID for debugging
-            - echo "Amplify App ID: $AMPLIFY_APP_ID"
+            - 'echo "Amplify App ID: $AMPLIFY_APP_ID"'
             # Run the build
-            - yarn build
-            - yarn export
+            - 'yarn build'
+            - 'yarn export'
       artifacts:
         baseDirectory: out
         files:
