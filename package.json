@@ -28,8 +28,8 @@
     "infra:synth": "yarn --cwd infrastructure synth",
     "infra:deploy:dev": "dotenv -e .env.dev -o -- yarn --cwd infrastructure deploy",
     "infra:deploy:prod": "dotenv -e .env.prod -o -- yarn --cwd infrastructure deploy",
-    "deploy:dev": "dotenv -e .env.dev -o -- sh -c 'yarn infra:deploy:dev && aws amplify start-job --app-id $AMPLIFY_APP_ID --branch-name main --job-type RELEASE'",
-    "deploy:prod": "dotenv -e .env.prod -o -- sh -c 'yarn infra:deploy:prod && aws amplify start-job --app-id $AMPLIFY_APP_ID --branch-name main --job-type RELEASE'"
+    "deploy:dev": "dotenv -e .env.dev -o -- sh -c 'yarn infra:deploy:dev && aws amplify start-job --app-id $AMPLIFY_APP_ID --branch-name main --job-type RELEASE --commit-id HEAD'",
+    "deploy:prod": "dotenv -e .env.prod -o -- sh -c 'yarn infra:deploy:prod && aws amplify start-job --app-id $AMPLIFY_APP_ID --branch-name main --job-type RELEASE --commit-id HEAD'"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",
