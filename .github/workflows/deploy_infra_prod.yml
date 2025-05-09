@@ -8,7 +8,6 @@ jobs:
     environment:
       name: prod
     env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
       ENV_NAME: ${{ vars.ENV_NAME }}
     steps:
       - name: Checkout repository
@@ -31,5 +30,3 @@ jobs:
       - name: Deploy CDK Stack
         id: deploy
         run: yarn infra:deploy:prod --outputs-file infra-outputs.json
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
