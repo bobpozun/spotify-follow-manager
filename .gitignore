@@ -75,3 +75,4 @@ amplifytools.xcconfig
 .env.local
 .env.dev
 .env.prod
+spotify-follow-manager.code-workspace

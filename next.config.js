@@ -16,9 +16,6 @@ const config = {
     config.externals = [...(config.externals || []), 'aws-cdk-lib', 'constructs'];
     return config;
   },
-  // Only include directories that contain our application code
-  // This will prevent Next.js from processing the infrastructure directory
-  pageExtensions: ['tsx', 'ts', 'jsx', 'js'].map(ext => `page.${ext}`),
   transpilePackages: [],
 };
 

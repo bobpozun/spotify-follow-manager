@@ -63,3 +63,23 @@ jobs:
       - name: Deploy CDK Stack (dev)
         id: deploy
         run: yarn infra:deploy:dev --outputs-file infra-outputs.json
+
+      - name: Remove Amplify webhooks
+        if: success()
+        run: |
+          # Extract Amplify App ID from outputs file
+          AMPLIFY_APP_ID=$(cat infra-outputs.json | jq -r '.["SpotifyFollowManagerInfraStack-dev"].AMPLIFYAPPID')
+          echo "Extracted Amplify App ID: $AMPLIFY_APP_ID"
+          
+          # List and remove all webhooks for this app
+          echo "Removing any existing Amplify webhooks..."
+          webhooks=$(aws amplify list-webhooks --app-id $AMPLIFY_APP_ID --query 'webhooks[*].webhookId' --output text)
+          if [ ! -z "$webhooks" ]; then
+            for id in $webhooks; do
+              echo "Deleting webhook: $id"
+              aws amplify delete-webhook --webhook-id $id
+            done
+            echo "All webhooks removed"
+          else
+            echo "No webhooks found to remove"
+          fi

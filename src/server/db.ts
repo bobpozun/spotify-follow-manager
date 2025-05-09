@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import { PrismaClient } from "@prisma/client";
 import { env } from "@/env";
 import { getDatabaseCredentials } from "./services/secretsService";
@@ -40,17 +42,13 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Create a promise for the Prisma client initialization
-if (!globalForPrisma.prismaPromise) {
-  globalForPrisma.prismaPromise = initPrismaClient();
-}
+globalForPrisma.prismaPromise ??= initPrismaClient();
 
 // Export a function to get the database connection
 export async function getDb(): Promise<PrismaClient> {
   if (!globalForPrisma.prisma) {
     // Make sure prismaPromise is initialized
-    if (!globalForPrisma.prismaPromise) {
-      globalForPrisma.prismaPromise = initPrismaClient();
-    }
+    globalForPrisma.prismaPromise ??= initPrismaClient();
     globalForPrisma.prisma = await globalForPrisma.prismaPromise;
   }
   

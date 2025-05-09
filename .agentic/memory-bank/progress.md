@@ -1,6 +1,6 @@
 Progress: AWS Infrastructure and CI/CD Integration
 
-- Last Updated: 2025-05-09T08:55:00-04:00
+- Last Updated: 2025-05-09T15:45:00-04:00
 - Completed:
   - Parsed `.agentic` configuration and environment settings
   - Created memories for tech stack and environment
@@ -18,7 +18,22 @@ Progress: AWS Infrastructure and CI/CD Integration
   - Added GitHub OIDC provider creation to CDK stack
   - Disabled automatic Amplify builds to ensure proper CI/CD workflow sequencing
   - Fixed Prisma client TypeScript errors
+  - Disabled auto builds on main branch via CDK CfnBranch (enableAutoBuild: false)
+  - Removed Amplify webhooks via CDK CustomResource Lambda
+  - Suppressed SSM-secrets plugin warning in amplify.yml (export AMPLIFY_DISABLE_SSM)
+  - Removed cache section in amplify.yml to avoid 404 cache warnings
+  - Updated README with bootstrap script usage
+  - Created `scripts/bootstrap.sh` for first-time setup
+  - Updated `scripts/bootstrap.sh` to load `AWS_REGION` from env and fix `cdk bootstrap` invocation
+  - Loaded `AMPLIFY_APP_ID` from env and fixed publish step in bootstrap script
+  - Removed Lambda-based webhook cleaner from CDK stack in favor of direct AWS CLI commands
+  - Created `scripts/clean-webhooks.js` utility for standalone webhook cleanup
+  - Added webhook cleanup steps to GitHub Actions workflow, bootstrap script, and package.json scripts
+  - Updated README with webhook cleanup documentation
+  - Enhanced amplify.yml with better build caching, logging, and environment configuration
+  - Removed custom pageExtensions override in next.config.js; cleaned .next and restarted dev to restore local routing
 - Next:
-  - Test complete CI/CD pipeline with OIDC provider and proper workflow sequencing
-  - Create comprehensive setup documentation for contributors
-  - Create bootstrap script for initial setup
+  - Push changes with amplify.yml improvements to trigger build with new configuration
+  - Verify webhook cleanup functions in GitHub Actions pipeline
+  - Monitor Amplify builds for any remaining SSM/secrets warnings
+  - Prepare documentation for contributors

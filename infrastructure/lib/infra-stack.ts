@@ -171,6 +171,7 @@ export class SpotifyInfraStack extends cdk.Stack {
     new amplify.CfnBranch(this, `MainBranch${envName}`, {
       appId: appId,
       branchName: 'main',
+      enableAutoBuild: false,
       environmentVariables: [
         {
           name: 'AUTH_SECRET',
@@ -198,6 +199,8 @@ export class SpotifyInfraStack extends cdk.Stack {
         }
       ]
     });
+
+
 
     // Output Amplify App ID for CLI usage
     new cdk.CfnOutput(this, `AMPLIFY_APP_ID`, {

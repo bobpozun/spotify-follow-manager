@@ -29,9 +29,8 @@ let secretsClientInstance: SecretsManagerClient | undefined;
  * Gets or initializes the AWS Secrets Manager client
  */
 function getSecretsClient(): SecretsManagerClient {
-  if (secretsClientInstance === undefined) {
-    secretsClientInstance = createSecretsClient();
-  }
+  // Use nullish coalescing assignment for cleaner code
+  secretsClientInstance ??= createSecretsClient();
   return secretsClientInstance;
 }
 
@@ -96,11 +95,14 @@ export async function getDatabaseCredentials(): Promise<string> {
     // Get the secret data
     const secretData = await getSecretValue(secretArn);
     
+    // Ensure password is a string to avoid type errors
+    const passwordString = String(secretData.password ?? "");
+    
     // Replace the placeholder in the connection string with the actual password
     // Using non-null assertion here as we've already checked DATABASE_URL is defined
     return env.DATABASE_URL.replace(
       /{{resolve:secretsmanager:[^}]+}}/,
-      secretData.password
+      passwordString
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -126,9 +128,11 @@ export interface AppSecrets {
 export async function getAppSecrets(secretArn?: string): Promise<AppSecrets> {
   // Default secrets from environment
   const defaultSecrets: AppSecrets = {
-    SPOTIFY_CLIENT_ID: env.SPOTIFY_CLIENT_ID,
-    SPOTIFY_CLIENT_SECRET: env.SPOTIFY_CLIENT_SECRET,
-    AUTH_SECRET: env.NODE_ENV === "production" ? (process.env.AUTH_SECRET ?? "") : env.AUTH_SECRET,
+    SPOTIFY_CLIENT_ID: env.SPOTIFY_CLIENT_ID ?? "",
+    SPOTIFY_CLIENT_SECRET: env.SPOTIFY_CLIENT_SECRET ?? "",
+    AUTH_SECRET: env.NODE_ENV === "production" ? 
+      (process.env.AUTH_SECRET ?? "") : 
+      (env.AUTH_SECRET ?? ""),
     GH_TOKEN: process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN ?? "",
   };
   

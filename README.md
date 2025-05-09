@@ -75,28 +75,40 @@ Automated GitHub deployments:
 
 ### First-time Setup
 
+Run the bootstrap script for your environment:
+
 ```bash
-# 1. Deploy infrastructure for each environment to create the IAM OIDC roles 
-# and Amplify apps
-yarn infra:deploy:dev
-yarn infra:deploy:prod
-
-# 2. Get the role ARNs and App IDs from each environment's output
-# - GitHubActionsRoleArndev=
-# - AmplifyAppIddev=
-
-# 3. Add those to GitHub environment secrets
-
-## 4. Initialize Amplify locally for each environment
-```bash
-# For first-time setup, use environment-specific init commands:
-yarn amplify:init:dev  # Initializes the dev environment 
-yarn amplify:init:prod # Initializes the prod environment
-
-# If you encounter app ID mismatch issues with existing Amplify projects:
-rm -rf amplify  # Remove the old configuration
-yarn amplify:init:dev  # Start fresh with the new app ID
+./scripts/bootstrap.sh dev
 ```
+
+Repeat for prod:
+
+```bash
+./scripts/bootstrap.sh prod
+```
+
+#### What the Bootstrap Script Does
+
+1. Installs dependencies
+2. Bootstraps CDK in your AWS account
+3. Deploys the infrastructure stack
+4. **Cleans up Amplify webhooks** to prevent duplicate builds
+5. Initializes the Amplify environment
+6. Triggers an initial build
+
+#### Manual Webhook Cleanup
+
+You can manually clean webhooks using the provided utility script:
+
+```bash
+# Clean webhooks for dev environment
+./scripts/clean-webhooks.js dev
+
+# Clean webhooks for prod environment
+./scripts/clean-webhooks.js prod
+```
+
+This is useful if you need to remove webhooks without redeploying infrastructure.
 
 ### Local Deployment Commands
 

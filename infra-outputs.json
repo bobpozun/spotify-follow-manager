@@ -1,0 +1,10 @@
+{
+  "SpotifyFollowManagerInfraStack-dev": {
+    "DatabaseURLdev": "postgresql://postgres:{{resolve:secretsmanager:arn:aws:secretsmanager:us-east-2:638709100606:secret:spotify-follow-manager-dev-db-credentials-jZuRMG:SecretString:password::}}@spotifyfollowmanagerinfrastack-databasedev5f032381-asn9togtnznz.cwb3elugzlel.us-east-2.rds.amazonaws.com:5432/spotifyFollowManager",
+    "DatabaseSecretArndev": "arn:aws:secretsmanager:us-east-2:638709100606:secret:spotify-follow-manager-dev-db-credentials-jZuRMG",
+    "AMPLIFYAPPID": "d315zq9arpv8vk",
+    "AmplifyBranchURLdev": "https://main.d315zq9arpv8vk.amplifyapp.com",
+    "AppSecretArndev": "arn:aws:secretsmanager:us-east-2:638709100606:secret:spotify-follow-manager-dev-app-secrets-CSjDXM",
+    "AWSROLETOASSUMEdev": "arn:aws:iam::638709100606:role/spotify-actions-deploy-dev"
+  }
+}
