@@ -68,7 +68,20 @@ export class SpotifyInfraStack extends cdk.Stack {
         GH_TOKEN: process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN ?? ''
       })),
     });
-    
+
+    // Import existing GitHub Actions deploy role instead of creating a new one
+    const deployRoleArn = `arn:aws:iam::${cdk.Aws.ACCOUNT_ID}:role/spotify-actions-deploy-${envName}`;
+    const deployRole = iam.Role.fromRoleArn(
+      this,
+      `ActionsDeployRole${envName}`,
+      deployRoleArn,
+      { mutable: true }
+    );
+    new cdk.CfnOutput(this, `AWS_ROLE_TO_ASSUME_${envName}`, {
+      value: deployRole.roleArn,
+      description: 'OIDC IAM role ARN for GitHub Actions',
+    });
+
     // Create RDS PostgreSQL instance
     const dbInstance = new rds.DatabaseInstance(this, `Database${envName}`, {
       engine: rds.DatabaseInstanceEngine.postgres({ version: rds.PostgresEngineVersion.VER_14 }),
@@ -109,32 +122,6 @@ export class SpotifyInfraStack extends cdk.Stack {
     new cdk.CfnOutput(this, `AppSecretArn${envName}`, {
       value: appSecrets.secretArn,
       description: 'ARN of the secret containing application credentials',
-    });
-
-    // Enable GitHub OIDC for CI/CD
-    const oidcProvider = new iam.OpenIdConnectProvider(this, 'GitHubOidcProvider', {
-      url: 'https://token.actions.githubusercontent.com',
-      clientIds: ['sts.amazonaws.com'],
-    });
-
-    const ghActionsRole = new iam.Role(this, `GitHubActionsRole${envName}`, {
-      assumedBy: new iam.FederatedPrincipal(
-        oidcProvider.openIdConnectProviderArn,
-        {
-          StringEquals: {
-            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-            'token.actions.githubusercontent.com:sub': 'repo:bobpozun/spotify-follow-manager:ref:refs/heads/main',
-          },
-        },
-        'sts:AssumeRole'
-      ),
-      roleName: `spotify-actions-deploy-${envName}`,
-      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess-Amplify')],
-    });
-
-    new cdk.CfnOutput(this, `AWS_ROLE_TO_ASSUME`, {
-      value: ghActionsRole.roleArn,
-      description: 'OIDC IAM role ARN for GitHub Actions',
     });
 
     // Validate GitHub OAuth token for Amplify
