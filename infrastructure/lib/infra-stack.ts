@@ -156,6 +156,10 @@ export class SpotifyInfraStack extends cdk.Stack {
       accessToken: oauthToken,
       buildSpec: fs.readFileSync(path.join(__dirname, '../../amplify.yml'), 'utf-8'),
       customRules: [{ source: '</^[^.]+$|\.(?!(js|css|png|jpg|svg|json)$)([^.]+$)/>', target: '/index.html', status: '200' }],
+      // Configure auto branch creation to disable automatic builds
+      autoBranchCreationConfig: {
+        enableAutoBuild: false,
+      },
     });
     
     // After app is created, get app domain
@@ -164,7 +168,7 @@ export class SpotifyInfraStack extends cdk.Stack {
     
     // Create the environment variables separately to avoid circular reference
     // Use actual branch environment variables with the new RDS database connection
-    const branch = new amplify.CfnBranch(this, `MainBranch${envName}`, {
+    new amplify.CfnBranch(this, `MainBranch${envName}`, {
       appId: appId,
       branchName: 'main',
       environmentVariables: [

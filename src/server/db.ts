@@ -47,9 +47,15 @@ if (!globalForPrisma.prismaPromise) {
 // Export a function to get the database connection
 export async function getDb(): Promise<PrismaClient> {
   if (!globalForPrisma.prisma) {
+    // Make sure prismaPromise is initialized
+    if (!globalForPrisma.prismaPromise) {
+      globalForPrisma.prismaPromise = initPrismaClient();
+    }
     globalForPrisma.prisma = await globalForPrisma.prismaPromise;
   }
-  return globalForPrisma.prisma;
+  
+  // At this point prisma is guaranteed to be initialized
+  return globalForPrisma.prisma!;
 }
 
 // For backward compatibility - this will initialize the client on first use
