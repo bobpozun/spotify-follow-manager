@@ -69,14 +69,34 @@ export class SpotifyInfraStack extends cdk.Stack {
       })),
     });
 
-    // Import existing GitHub Actions deploy role instead of creating a new one
-    const deployRoleArn = `arn:aws:iam::${cdk.Aws.ACCOUNT_ID}:role/spotify-actions-deploy-${envName}`;
-    const deployRole = iam.Role.fromRoleArn(
-      this,
-      `ActionsDeployRole${envName}`,
-      deployRoleArn,
-      { mutable: true }
-    );
+    // Create GitHub OIDC Provider for GitHub Actions
+    const githubOidcProvider = new iam.OpenIdConnectProvider(this, `GitHubOIDCProvider-${envName}`, {
+      url: 'https://token.actions.githubusercontent.com',
+      clientIds: ['sts.amazonaws.com'],
+      thumbprints: ['6938fd4d98bab03faadb97b34396831e3780aea1'], // GitHub tokens thumbprint
+    });
+    
+    // Create IAM role that GitHub Actions can assume
+    const deployRole = new iam.Role(this, `GitHubActionsRole-${envName}`, {
+      roleName: `spotify-actions-deploy-${envName}`,
+      description: 'Role for GitHub Actions to deploy Spotify Follow Manager',
+      assumedBy: new iam.WebIdentityPrincipal(
+        githubOidcProvider.openIdConnectProviderArn,
+        {
+          StringEquals: {
+            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+          },
+          StringLike: {
+            'token.actions.githubusercontent.com:sub': 'repo:bobpozun/spotify-follow-manager:*',
+          },
+        }
+      ),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'), // You should restrict this for production
+      ],
+      maxSessionDuration: cdk.Duration.hours(1),
+    });
+    
     new cdk.CfnOutput(this, `AWS_ROLE_TO_ASSUME_${envName}`, {
       value: deployRole.roleArn,
       description: 'OIDC IAM role ARN for GitHub Actions',
