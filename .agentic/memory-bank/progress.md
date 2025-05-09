@@ -1,6 +1,6 @@
-Progress: AWS Secrets Manager Integration
+Progress: AWS Infrastructure and CI/CD Integration
 
-- Last Updated: 2025-05-08T22:53:16-04:00
+- Last Updated: 2025-05-09T08:55:00-04:00
 - Completed:
   - Parsed `.agentic` configuration and environment settings
   - Created memories for tech stack and environment
@@ -13,7 +13,12 @@ Progress: AWS Secrets Manager Integration
   - Added **Technologies** section to `README.md`
   - Fixed routing 404 by switching Amplify hosting to static export from `out/`
   - Updated README with local preview instructions
+  - Fixed Next.js build errors by excluding infrastructure code from compilation
+  - Consistently used yarn throughout (removed package-lock.json from infrastructure)
+  - Added GitHub OIDC provider creation to CDK stack
+  - Disabled automatic Amplify builds to ensure proper CI/CD workflow sequencing
+  - Fixed Prisma client TypeScript errors
 - Next:
-  - Test local static preview with `yarn preview:export`
-  - Publish static site via `yarn amplify:publish:dev` and verify live site
-  - Propagate env updates to production and deploy
+  - Test complete CI/CD pipeline with OIDC provider and proper workflow sequencing
+  - Create comprehensive setup documentation for contributors
+  - Create bootstrap script for initial setup

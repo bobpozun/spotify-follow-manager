@@ -1,17 +1,20 @@
-Active Context: Memory Bank Update
+Active Context: AWS Infrastructure and CI/CD Pipeline
 
-- Last Updated: 2025-05-08T22:53:16-04:00
-- Current focus: Synchronizing agent memory with recent environment and deployment enhancements
+- Last Updated: 2025-05-09T08:55:00-04:00
+- Current focus: Fixing deployment issues and ensuring proper CI/CD workflow sequencing
 - Recent changes:
-  - Created `.env.local.example` and `.env.aws.example` files
-  - Updated `.env.dev` and `.env.prod` with GitHub tokens and AWS CDK output values
-  - Added `export` script in `package.json` and updated `amplify.yml` for static export
-  - Added **Technologies** section to `README.md`
-  - Introduced `preview:export` local preview workflow
+  - Added GitHub OIDC provider creation to CDK stack for secure auth between GitHub Actions and AWS
+  - Disabled automatic Amplify builds to ensure proper workflow sequencing
+  - Fixed Prisma client TypeScript errors causing build failures
+  - Removed unused variable warnings in infrastructure stack
 - Current architecture:
-  - Static export hosted by AWS Amplify from `out/` directory
+  - Next.js app hosted on AWS Amplify
+  - Infrastructure deployed via AWS CDK with GitHub OIDC integration
+  - CI/CD workflow using chained GitHub Actions workflows
   - Secrets Manager integration for DB and application secrets
+  - PostgreSQL RDS database
 - Next:
-  - Test static preview locally
-  - Publish static site via `yarn amplify:publish:dev` and verify
-  - Propagate env updates to production and deploy
+  - Test full CI/CD pipeline after OIDC provider creation
+  - Add comprehensive first-time setup documentation for contributors
+  - Add error handling in deployment scripts
+  - Create bootstrap script for initial OIDC provider setup

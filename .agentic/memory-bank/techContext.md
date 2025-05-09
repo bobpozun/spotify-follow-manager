@@ -1,19 +1,28 @@
-Tech Context: Detailed stack and environment
+# Technical Context
 
-- Full-stack in TypeScript (frontend + backend)
-- Next.js: React framework for server-rendered and static web applications
-- React (UI) + Tailwind CSS (styling)
-- tRPC for typesafe API layer
-- Prisma ORM for database modelling and migrations
-- Zod for runtime schema validation of env vars and data
-- NextAuth.js for authentication management
-- React Query for client-side data fetching and caching
-- AWS Amplify for hosting, CI/CD pipelines, and environment management
-- AWS Cognito (user auth) and AWS Secrets Manager for secure secret storage
-- @aws-sdk/client-secrets-manager for fetching secrets at runtime
-- Docker & PostgreSQL for local database development
-- Spotify Web API integration with scopes:
-  - user-follow-read
-  - playlist-read-private
-  - user-follow-modify
-- Development Environment: macOS, Zsh, Yarn
+## Stack Components
+
+- **Frontend**: Next.js 15, React 19, Tailwind CSS
+- **API Layer**: tRPC for type-safe API queries
+- **Authentication**: NextAuth.js with Spotify OAuth
+- **Database Access**: Prisma ORM with PostgreSQL
+- **Infrastructure**: AWS CDK for infrastructure as code
+- **CI/CD**: GitHub Actions with OIDC authentication
+- **Hosting**: AWS Amplify
+- **Database**: AWS RDS PostgreSQL
+- **Secrets Management**: AWS Secrets Manager
+- **Package Manager**: Yarn exclusively
+
+## Development Environment
+
+- **Local Database**: Docker PostgreSQL container
+- **Local Auth**: Spotify developer credentials in `.env.local`
+- **Local Previewing**: `yarn preview:export` for static export testing
+
+## Deployment Architecture
+
+- **Infrastructure Pipeline**: GitHub Action → CDK → AWS CloudFormation
+- **Application Pipeline**: GitHub Action → Amplify Build → Amplify Hosting
+- **Authentication**: GitHub OIDC for secure AWS role assumption
+- **Database Credentials**: Managed by Secrets Manager, fetched at runtime
+- **Application Configuration**: Environment-specific settings via ENV_NAME variable
