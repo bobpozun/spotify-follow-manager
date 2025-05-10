@@ -103,7 +103,7 @@ jobs:
 
       - name: Publish to Amplify
         run: |
-          echo "Publishing to Amplify using standalone build mode for optimal API route support"
+          echo "Publishing to Amplify with standard Next.js build"
           yarn amplify:publish:prod
         env:
           AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}

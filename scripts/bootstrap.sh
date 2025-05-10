@@ -149,7 +149,7 @@ done
 echo "✅ Successfully set all environment variables in Amplify"
 
 echo "Publishing app to Amplify (release)..."
-echo "Using standalone build mode for optimal API route support"
+echo "Using standard Next.js build for Amplify deployment"
 npx dotenv -e "$ENV_FILE" -o -- aws amplify start-job --app-id $AMPLIFY_APP_ID --branch-name main --job-type RELEASE --commit-id HEAD
 
 echo "Bootstrap complete for $ENV. Next: yarn dev or yarn amplify:publish:$ENV"

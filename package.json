@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "build": "next build",
-    "build:standalone": "NEXT_STANDALONE=true next build",
     "dev:local": "NODE_OPTIONS=--no-warnings cp .env.local.development .env.local && dotenv -e .env.local -- next dev --turbo",
     "check": "next lint && tsc --noEmit",
     "db:generate": "dotenv -e .env.local -- prisma migrate dev",
