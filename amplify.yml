@@ -23,7 +23,7 @@ applications:
             # Run the build (export is now part of build)
             - 'yarn build'
       artifacts:
-        baseDirectory: .next
+        baseDirectory: out
         files:
           - "**/*"
       # Enable caching
