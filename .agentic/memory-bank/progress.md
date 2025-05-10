@@ -1,6 +1,6 @@
 Progress: AWS Infrastructure and CI/CD Integration
 
-- Last Updated: 2025-05-10T08:20:00-04:00
+- Last Updated: 2025-05-10T09:12:00-04:00
 - Completed:
   - Parsed `.agentic` configuration and environment settings
   - Created memories for tech stack and environment
@@ -38,11 +38,14 @@ Progress: AWS Infrastructure and CI/CD Integration
   - Implemented dual-environment API routes that work both locally and in Amplify deployments
   - Fixed Prisma compatibility issues by removing Edge runtime from API routes
   - Made Next.js configuration adaptive to detect Amplify environments for proper static exports
-  - Created conditional dynamic/static API route configuration based on deployment environment
+  - Changed deployment strategy from static export to standalone server for API route compatibility
+  - Fixed build failures by simplifying API route configuration
+  - Updated workflows and bootstrap script to use improved build approach
+  - Configured proper artifact paths in amplify.yml for standalone mode
   - Removed custom pageExtensions override in next.config.js; cleaned .next and restarted dev to restore local routing
 - Next:
-  - Push and test final CI/CD improvements with latest API route and Next.js configuration
-  - Monitor Amplify build logs to verify proper environment setup and static generation
-  - Test local development environment to ensure dynamic API routes function correctly
-  - Document the dual-environment approach for local development vs. Amplify deployment
+  - Push and test final CI/CD improvements with the standalone server approach
+  - Monitor Amplify build logs to verify successful deployment with the new configuration
+  - Test local development to ensure API routes work correctly
+  - Document the standalone server approach for Amplify deployment
   - Prepare comprehensive deployment documentation for future developers

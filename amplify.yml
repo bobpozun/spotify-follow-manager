@@ -20,12 +20,21 @@ applications:
             - 'export NODE_ENV=production'
             # Print app ID for debugging
             - 'echo "Amplify App ID: $AMPLIFY_APP_ID"'
-            # Run the build (export is now part of build)
-            - 'yarn build'
+            # Build for server-side rendering
+            - 'yarn build:standalone'
       artifacts:
-        baseDirectory: out
+        baseDirectory: .next/standalone
         files:
           - "**/*"
+        secondaryArtifacts:
+          - baseDirectory: .next/static
+            files:
+              - "**/*"
+            destination: .next/static
+          - baseDirectory: public
+            files:
+              - "**/*"
+            destination: .next/static
       # Enable caching
       cache:
         paths:

@@ -102,7 +102,9 @@ jobs:
           done
 
       - name: Publish to Amplify
-        run: yarn amplify:publish
+        run: |
+          echo "Publishing to Amplify using standalone build mode for optimal API route support"
+          yarn amplify:publish:prod
         env:
           AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
           ENV_NAME: prod

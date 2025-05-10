@@ -68,7 +68,8 @@ echo "Creating environment variables file for Amplify"
 echo "{" > amplify-env.json
 echo "  \"NODE_ENV\": \"production\"," >> amplify-env.json
 echo "  \"NEXTAUTH_URL\": \"$AMPLIFY_BRANCH_URL\"," >> amplify-env.json
-echo "  \"ENV_NAME\": \"$ENV\"" >> amplify-env.json
+echo "  \"ENV_NAME\": \"$ENV\"," >> amplify-env.json
+echo "  \"AMPLIFY_APP_ID\": \"$AMPLIFY_APP_ID\"" >> amplify-env.json
 
 # Get app secrets
 if [ ! -z "$APP_SECRETS_ARN" ]; then
@@ -148,6 +149,7 @@ done
 echo "✅ Successfully set all environment variables in Amplify"
 
 echo "Publishing app to Amplify (release)..."
+echo "Using standalone build mode for optimal API route support"
 npx dotenv -e "$ENV_FILE" -o -- aws amplify start-job --app-id $AMPLIFY_APP_ID --branch-name main --job-type RELEASE --commit-id HEAD
 
 echo "Bootstrap complete for $ENV. Next: yarn dev or yarn amplify:publish:$ENV"
