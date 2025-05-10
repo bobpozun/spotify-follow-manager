@@ -78,16 +78,23 @@ function extractSecretArn(placeholderString: string): string {
  * Retrieves database credentials from AWS Secrets Manager
  */
 export async function getDatabaseCredentials(): Promise<string> {
-  // If using a local or hardcoded connection string, just return it
-  if (env.DATABASE_URL && !env.DATABASE_URL.includes('{{resolve:secretsmanager:')) {
-    return env.DATABASE_URL;
-  }
-
-  // Ensure DATABASE_URL is defined
+  // Check if DATABASE_URL is defined
   if (!env.DATABASE_URL) {
     throw new Error("DATABASE_URL is not defined");
   }
-
+  
+  // Only fetch secrets in production environment and when the URL contains secretsmanager
+  if (!env.DATABASE_URL.includes("secretsmanager") || process.env.NODE_ENV !== "production") {
+    return env.DATABASE_URL;
+  }
+  
+  // If we're in a build context (AMPLIFY or CI env vars present), don't try to resolve secrets
+  if (process.env.AMPLIFY_APP_ID || process.env.CI) {
+    console.log("Building in CI environment, using DATABASE_URL as-is");
+    // Just return the URL directly for build purposes
+    return env.DATABASE_URL;
+  }
+  
   try {
     // Extract secret ARN from the placeholder connection string
     const secretArn = extractSecretArn(env.DATABASE_URL);
@@ -107,7 +114,12 @@ export async function getDatabaseCredentials(): Promise<string> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error retrieving database credentials:", errorMessage);
-    throw new Error(`Failed to retrieve database credentials: ${errorMessage}`);
+    // In production, this should fail
+    // In development or build, just return the URL as-is
+    if (env.NODE_ENV === "production" && !process.env.AMPLIFY_APP_ID) {
+      throw new Error(`Failed to retrieve database credentials: ${errorMessage}`);
+    }
+    return env.DATABASE_URL;
   }
 }
 

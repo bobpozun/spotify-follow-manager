@@ -26,16 +26,26 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Retrieve App Secrets from AWS Secrets Manager
+      - name: Retrieve Secrets from AWS Secrets Manager
         if: success() 
         run: |
-          # Get the app secrets ARN from CDK outputs
+          # Get the secrets ARNs from CDK outputs
           APP_SECRETS_ARN=$(aws cloudformation describe-stacks --stack-name SpotifyInfraStack-dev --query "Stacks[0].Outputs[?OutputKey=='AppSecretArndev'].OutputValue" --output text)
+          DB_SECRET_ARN=$(aws cloudformation describe-stacks --stack-name SpotifyInfraStack-dev --query "Stacks[0].Outputs[?OutputKey=='DatabaseSecretArndev'].OutputValue" --output text)
+          DB_URL=$(aws cloudformation describe-stacks --stack-name SpotifyInfraStack-dev --query "Stacks[0].Outputs[?OutputKey=='DatabaseURLdev'].OutputValue" --output text)
+          
+          # Get Amplify URL for NEXTAUTH_URL
+          AMPLIFY_URL=$(aws cloudformation describe-stacks --stack-name SpotifyInfraStack-dev --query "Stacks[0].Outputs[?OutputKey=='AmplifyBranchURLdev'].OutputValue" --output text)
+          
+          # Create environment variables file for Amplify
+          echo "Creating environment variables file for Amplify"
+          echo "DATABASE_URL=$DB_URL" > amplify-env.json
+          echo "NEXTAUTH_URL=$AMPLIFY_URL" >> amplify-env.json
           
           if [ ! -z "$APP_SECRETS_ARN" ]; then
             echo "Retrieved App Secrets ARN: $APP_SECRETS_ARN"
             
-            # Get the secrets from AWS Secrets Manager
+            # Get the app secrets from AWS Secrets Manager
             SECRETS=$(aws secretsmanager get-secret-value --secret-id $APP_SECRETS_ARN --query SecretString --output text)
             
             # Parse the JSON and set environment variables
@@ -48,8 +58,35 @@ jobs:
             echo "AUTH_SECRET=$AUTH_SECRET" >> $GITHUB_ENV
             echo "SPOTIFY_CLIENT_ID=$SPOTIFY_CLIENT_ID" >> $GITHUB_ENV
             echo "SPOTIFY_CLIENT_SECRET=$SPOTIFY_CLIENT_SECRET" >> $GITHUB_ENV
+            
+            # Add to Amplify env file
+            echo "AUTH_SECRET=$AUTH_SECRET" >> amplify-env.json
+            echo "SPOTIFY_CLIENT_ID=$SPOTIFY_CLIENT_ID" >> amplify-env.json
+            echo "SPOTIFY_CLIENT_SECRET=$SPOTIFY_CLIENT_SECRET" >> amplify-env.json
           else
             echo "Warning: App Secrets ARN not found. Make sure the infrastructure is deployed."
+          fi
+          
+          if [ ! -z "$DB_SECRET_ARN" ]; then
+            echo "Retrieved Database Secret ARN: $DB_SECRET_ARN"
+            
+            # Get the DB password from AWS Secrets Manager
+            DB_SECRETS=$(aws secretsmanager get-secret-value --secret-id $DB_SECRET_ARN --query SecretString --output text)
+            DB_PASSWORD=$(echo $DB_SECRETS | jq -r '.password')
+            
+            # Process the DATABASE_URL and replace the placeholder
+            PROCESSED_DB_URL=$(echo $DB_URL | sed "s|{{resolve:secretsmanager:[^}]\+}}|$DB_PASSWORD|") 
+            echo "DATABASE_URL=$PROCESSED_DB_URL" >> amplify-env.json
+            
+            # Upload the env file to S3 to pass between workflows
+            UNIQUE_ID=$(date +%s)
+            S3_ENV_PATH="s3://spotify-follow-manager-artifacts-$UNIQUE_ID/amplify-env.json"
+            aws s3 mb "s3://spotify-follow-manager-artifacts-$UNIQUE_ID" || true
+            aws s3 cp amplify-env.json "$S3_ENV_PATH"
+            echo "S3_ENV_PATH=$S3_ENV_PATH" >> $GITHUB_ENV
+            echo "S3_BUCKET=spotify-follow-manager-artifacts-$UNIQUE_ID" >> $GITHUB_ENV
+          else
+            echo "Warning: Database Secret ARN not found. Make sure the infrastructure is deployed."
           fi
 
       - name: Setup Node.js

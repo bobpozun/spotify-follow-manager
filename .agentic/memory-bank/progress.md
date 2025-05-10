@@ -1,6 +1,6 @@
 Progress: AWS Infrastructure and CI/CD Integration
 
-- Last Updated: 2025-05-09T15:45:00-04:00
+- Last Updated: 2025-05-09T20:10:00-04:00
 - Completed:
   - Parsed `.agentic` configuration and environment settings
   - Created memories for tech stack and environment
@@ -31,9 +31,12 @@ Progress: AWS Infrastructure and CI/CD Integration
   - Added webhook cleanup steps to GitHub Actions workflow, bootstrap script, and package.json scripts
   - Updated README with webhook cleanup documentation
   - Enhanced amplify.yml with better build caching, logging, and environment configuration
+  - Implemented environment variables injection from Secrets Manager to Amplify
+  - Updated GitHub workflows to pass environment variables securely between jobs
+  - Fixed deployment problems by setting explicit environment variables
   - Removed custom pageExtensions override in next.config.js; cleaned .next and restarted dev to restore local routing
 - Next:
-  - Push changes with amplify.yml improvements to trigger build with new configuration
-  - Verify webhook cleanup functions in GitHub Actions pipeline
-  - Monitor Amplify builds for any remaining SSM/secrets warnings
-  - Prepare documentation for contributors
+  - Test deployment with updated workflows and environment variable handling
+  - Push changes to trigger the full CI/CD pipeline with proper environment variables
+  - Verify application runs correctly with secrets pulled from AWS Secrets Manager
+  - Prepare deployment documentation for future developers

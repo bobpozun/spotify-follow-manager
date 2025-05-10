@@ -54,6 +54,99 @@ fi
 echo "Initializing Amplify environment..."
 npx dotenv -e "$ENV_FILE" -o -- yarn amplify:init:$ENV
 
+echo "Setting up environment variables in Amplify..."
+echo "Getting secrets from AWS Secrets Manager..."
+
+# Get details from CloudFormation outputs
+APP_SECRETS_ARN=$(npx dotenv -e "$ENV_FILE" -o -- aws cloudformation describe-stacks --stack-name SpotifyFollowManagerInfraStack-$ENV --query "Stacks[0].Outputs[?OutputKey=='AppSecretArn${ENV}'].OutputValue" --output text)
+DB_SECRET_ARN=$(npx dotenv -e "$ENV_FILE" -o -- aws cloudformation describe-stacks --stack-name SpotifyFollowManagerInfraStack-$ENV --query "Stacks[0].Outputs[?OutputKey=='DatabaseSecretArn${ENV}'].OutputValue" --output text)
+DB_URL=$(npx dotenv -e "$ENV_FILE" -o -- aws cloudformation describe-stacks --stack-name SpotifyFollowManagerInfraStack-$ENV --query "Stacks[0].Outputs[?OutputKey=='DatabaseURL${ENV}'].OutputValue" --output text)
+AMPLIFY_BRANCH_URL=$(npx dotenv -e "$ENV_FILE" -o -- aws cloudformation describe-stacks --stack-name SpotifyFollowManagerInfraStack-$ENV --query "Stacks[0].Outputs[?OutputKey=='AmplifyBranchURL${ENV}'].OutputValue" --output text)
+
+# Start with some basic environment vars
+echo "Creating environment variables file for Amplify"
+echo "{" > amplify-env.json
+echo "  \"NODE_ENV\": \"production\"," >> amplify-env.json
+echo "  \"NEXTAUTH_URL\": \"$AMPLIFY_BRANCH_URL\"," >> amplify-env.json
+echo "  \"ENV_NAME\": \"$ENV\"" >> amplify-env.json
+
+# Get app secrets
+if [ ! -z "$APP_SECRETS_ARN" ]; then
+  echo "Retrieved App Secrets ARN: $APP_SECRETS_ARN"
+  
+  # Get the app secrets from AWS Secrets Manager
+  SECRETS=$(npx dotenv -e "$ENV_FILE" -o -- aws secretsmanager get-secret-value --secret-id $APP_SECRETS_ARN --query SecretString --output text)
+  
+  # Parse the JSON and set environment variables
+  AUTH_SECRET=$(echo $SECRETS | jq -r '.AUTH_SECRET')
+  SPOTIFY_CLIENT_ID=$(echo $SECRETS | jq -r '.SPOTIFY_CLIENT_ID')
+  SPOTIFY_CLIENT_SECRET=$(echo $SECRETS | jq -r '.SPOTIFY_CLIENT_SECRET')
+  
+  # Add to Amplify env file
+  echo "," >> amplify-env.json
+  echo "  \"AUTH_SECRET\": \"$AUTH_SECRET\"," >> amplify-env.json
+  echo "  \"SPOTIFY_CLIENT_ID\": \"$SPOTIFY_CLIENT_ID\"," >> amplify-env.json
+  echo "  \"SPOTIFY_CLIENT_SECRET\": \"$SPOTIFY_CLIENT_SECRET\"" >> amplify-env.json
+fi
+
+# Get database credentials
+if [ ! -z "$DB_SECRET_ARN" ]; then
+  echo "Retrieved Database Secret ARN: $DB_SECRET_ARN"
+  
+  # Get the DB password from AWS Secrets Manager
+  DB_SECRETS=$(npx dotenv -e "$ENV_FILE" -o -- aws secretsmanager get-secret-value --secret-id $DB_SECRET_ARN --query SecretString --output text)
+  DB_PASSWORD=$(echo $DB_SECRETS | jq -r '.password')
+  
+  # Process the DATABASE_URL and replace the placeholder
+  PROCESSED_DB_URL=$(echo $DB_URL | sed "s|{{resolve:secretsmanager:[^}]\+}}|$DB_PASSWORD|") 
+  echo "," >> amplify-env.json
+  echo "  \"DATABASE_URL\": \"$PROCESSED_DB_URL\"" >> amplify-env.json
+fi
+
+# Close JSON
+echo "}" >> amplify-env.json
+
+# Set environment variables in Amplify
+echo "Setting environment variables in Amplify..."
+
+# Handle environment variables one by one to avoid parsing issues
+echo "Setting environment variables in Amplify: $(jq -r 'keys | join(", ")' amplify-env.json)"
+
+# Process each variable individually to prevent parsing errors
+jq -r 'to_entries[] | .key' amplify-env.json | while read KEY; do
+  # Get the value for this key and properly handle escaping
+  VALUE=$(jq -r --arg key "$KEY" '.[$key]' amplify-env.json)
+  
+  # Modify the DATABASE_URL to use a literal password instead of the placeholder
+  if [ "$KEY" == "DATABASE_URL" ]; then
+    echo "Processing DATABASE_URL to replace placeholder with actual password..."
+    
+    # Extract the placeholder part
+    PLACEHOLDER=$(echo "$VALUE" | grep -o '{{resolve:secretsmanager:[^}]\+}}')
+    
+    # Get the actual DB password from Secrets Manager
+    DB_SECRET_ARN=$(npx dotenv -e "$ENV_FILE" -o -- aws cloudformation describe-stacks --stack-name SpotifyFollowManagerInfraStack-$ENV --query "Stacks[0].Outputs[?OutputKey=='DatabaseSecretArn${ENV}'].OutputValue" --output text)
+    DB_SECRETS=$(npx dotenv -e "$ENV_FILE" -o -- aws secretsmanager get-secret-value --secret-id $DB_SECRET_ARN --query SecretString --output text)
+    DB_PASSWORD=$(echo $DB_SECRETS | jq -r '.password')
+    
+    # Replace the placeholder with the actual password
+    VALUE=$(echo "$VALUE" | sed "s|$PLACEHOLDER|$DB_PASSWORD|") 
+  fi
+  
+  echo "Setting $KEY in Amplify environment"
+  npx dotenv -e "$ENV_FILE" -o -- aws amplify update-app \
+    --app-id $AMPLIFY_APP_ID \
+    --environment-variables "$KEY=$VALUE" \
+    --output json > /dev/null
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ Failed to set $KEY in Amplify environment"
+    exit 1
+  fi
+done
+
+echo "✅ Successfully set all environment variables in Amplify"
+
 echo "Publishing app to Amplify (release)..."
 npx dotenv -e "$ENV_FILE" -o -- aws amplify start-job --app-id $AMPLIFY_APP_ID --branch-name main --job-type RELEASE --commit-id HEAD
 

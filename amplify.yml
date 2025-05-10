@@ -20,11 +20,10 @@ applications:
             - 'export NODE_ENV=production'
             # Print app ID for debugging
             - 'echo "Amplify App ID: $AMPLIFY_APP_ID"'
-            # Run the build
+            # Run the build (export is now part of build)
             - 'yarn build'
-            - 'yarn export'
       artifacts:
-        baseDirectory: out
+        baseDirectory: .next
         files:
           - "**/*"
       # Enable caching
