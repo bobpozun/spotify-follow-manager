@@ -6,6 +6,9 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
+  // Enable standalone output mode for Amplify deployment
+  output: 'standalone',
+  
   // Configure image domains
   images: {
     domains: ["i.scdn.co"],

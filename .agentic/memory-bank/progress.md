@@ -1,6 +1,6 @@
 Progress: AWS Infrastructure and CI/CD Integration
 
-- Last Updated: 2025-05-10T09:12:00-04:00
+- Last Updated: 2025-05-10T09:20:00-04:00
 - Completed:
   - Parsed `.agentic` configuration and environment settings
   - Created memories for tech stack and environment
@@ -44,8 +44,8 @@ Progress: AWS Infrastructure and CI/CD Integration
   - Configured proper artifact paths in amplify.yml for standalone mode
   - Removed custom pageExtensions override in next.config.js; cleaned .next and restarted dev to restore local routing
 - Next:
-  - Push and test final CI/CD improvements with the standalone server approach
-  - Monitor Amplify build logs to verify successful deployment with the new configuration
+  - Push latest fix that explicitly enables standalone output in Next.js config
+  - Monitor Amplify build logs to verify successful creation of .next/standalone directory
   - Test local development to ensure API routes work correctly
   - Document the standalone server approach for Amplify deployment
   - Prepare comprehensive deployment documentation for future developers
