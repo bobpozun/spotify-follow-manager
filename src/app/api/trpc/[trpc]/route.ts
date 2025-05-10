@@ -5,10 +5,10 @@ import { env } from "@/env";
 import { appRouter } from "@/server/api/root";
 import { createTRPCContext } from "@/server/api/trpc";
 
-// Static export config for Amplify deployments
-// Use force-static when running as a static export (Amplify) but force-dynamic locally
-// Note: This checks for specific variables present in Amplify environments
-export const dynamic = process.env.AMPLIFY_APP_ID ? "force-static" : "force-dynamic";
+// For Amplify deployments, we need static generation
+// Since this is production code, we use force-static
+// For local development, build with AMPLIFY_DISABLE_STATIC=true
+export const dynamic = "force-static";
 
 // We explicitly avoid using Edge runtime as it's not compatible with Prisma
 
