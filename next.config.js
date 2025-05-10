@@ -6,8 +6,7 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
-  // Enable standalone output mode for Amplify deployment
-  output: 'standalone',
+  // Use standard output mode for simpler Amplify deployment
   
   // Configure image domains
   images: {

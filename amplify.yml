@@ -1,42 +1,37 @@
 version: 1
-applications:
-  - appRoot: '.'  # root of repo containing package.json and next.config.js
-    frontend:
-      phases:
-        preBuild:
-          commands:
-            # Disable SSM Parameter Store warnings
-            - 'export AMPLIFY_DISABLE_SSM=true'
-            # Install dependencies
-            - 'yarn install'
-            # Ensure AWS CLI has proper region
-            - 'export AWS_REGION=${AWS_REGION:-us-east-2}'
-            - 'echo "AWS Region: $AWS_REGION"'
-            # Print env info for debugging (excluding sensitive values)
-            - 'env | grep -v -E "SECRET|TOKEN|PASSWORD" | sort'
-        build:
-          commands:
-            # Explicitly set NODE_ENV for the build
-            - 'export NODE_ENV=production'
-            # Print app ID for debugging
-            - 'echo "Amplify App ID: $AMPLIFY_APP_ID"'
-            # Build for server-side rendering
-            - 'yarn build:standalone'
-      artifacts:
-        baseDirectory: .next/standalone
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Disable SSM Parameter Store warnings
+        - export AMPLIFY_DISABLE_SSM=true
+        # Install dependencies
+        - yarn install
+        # Ensure AWS CLI has proper region
+        - export AWS_REGION=${AWS_REGION:-us-east-2}
+        - echo "AWS Region: $AWS_REGION"
+        # Print env info for debugging (excluding sensitive values)
+        - env | grep -v -E "SECRET|TOKEN|PASSWORD" | sort
+    build:
+      commands:
+        # Explicitly set NODE_ENV for production
+        - export NODE_ENV=production
+        # Print app ID for debugging
+        - echo "Amplify App ID: $AMPLIFY_APP_ID"
+        # Build the Next.js app
+        - yarn build
+  artifacts:
+    # The baseDirectory is where the artifacts will be copied from
+    baseDirectory: .next
+    files:
+      - '**/*'
+    # Include public directory for static assets
+    secondaryArtifacts:
+      - baseDirectory: public
         files:
-          - "**/*"
-        secondaryArtifacts:
-          - baseDirectory: .next/static
-            files:
-              - "**/*"
-            destination: .next/static
-          - baseDirectory: public
-            files:
-              - "**/*"
-            destination: .next/static
-      # Enable caching
-      cache:
-        paths:
-          - node_modules/**/*
-          - .next/cache/**/*
+          - '**/*'
+        destination: public
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
