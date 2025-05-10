@@ -1,6 +1,6 @@
 Progress: AWS Infrastructure and CI/CD Integration
 
-- Last Updated: 2025-05-09T20:10:00-04:00
+- Last Updated: 2025-05-10T08:20:00-04:00
 - Completed:
   - Parsed `.agentic` configuration and environment settings
   - Created memories for tech stack and environment
@@ -34,9 +34,15 @@ Progress: AWS Infrastructure and CI/CD Integration
   - Implemented environment variables injection from Secrets Manager to Amplify
   - Updated GitHub workflows to pass environment variables securely between jobs
   - Fixed deployment problems by setting explicit environment variables
+  - Solved Next.js static export deprecation warnings by updating to modern 'output: export' approach
+  - Implemented dual-environment API routes that work both locally and in Amplify deployments
+  - Fixed Prisma compatibility issues by removing Edge runtime from API routes
+  - Made Next.js configuration adaptive to detect Amplify environments for proper static exports
+  - Created conditional dynamic/static API route configuration based on deployment environment
   - Removed custom pageExtensions override in next.config.js; cleaned .next and restarted dev to restore local routing
 - Next:
-  - Test deployment with updated workflows and environment variable handling
-  - Push changes to trigger the full CI/CD pipeline with proper environment variables
-  - Verify application runs correctly with secrets pulled from AWS Secrets Manager
-  - Prepare deployment documentation for future developers
+  - Push and test final CI/CD improvements with latest API route and Next.js configuration
+  - Monitor Amplify build logs to verify proper environment setup and static generation
+  - Test local development environment to ensure dynamic API routes function correctly
+  - Document the dual-environment approach for local development vs. Amplify deployment
+  - Prepare comprehensive deployment documentation for future developers

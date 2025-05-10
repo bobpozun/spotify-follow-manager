@@ -6,12 +6,17 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
-  // Enable static exports - this replaces the 'next export' command
-  output: 'export',
-  // Configure static image domains
+  // Enable static exports only in production for Amplify deployment
+  ...(process.env.NODE_ENV === 'production' && process.env.AMPLIFY_APP_ID
+    ? { output: 'export' }
+    : {}),
+  // Configure image domains
   images: {
     domains: ["i.scdn.co"],
-    unoptimized: true, // Required for static export
+    // Only use unoptimized images in production with static export
+    ...(process.env.NODE_ENV === 'production' && process.env.AMPLIFY_APP_ID
+      ? { unoptimized: true }
+      : {}),
   },
   // Completely exclude the infrastructure directory from Next.js
   // This prevents Next.js from trying to compile AWS CDK code
