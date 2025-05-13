@@ -1,0 +1,95 @@
+name: Deploy to AWS Amplify (Dev)
+
+on:
+  workflow_run:
+    workflows: ["Deploy Infrastructure (Dev)"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Get S3 bucket name from previous workflow
+        if: github.event_name == 'workflow_run'
+        run: |
+          WORKFLOW_JOBS=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs -q '.jobs')
+          echo "$WORKFLOW_JOBS" > workflow_jobs.json
+          S3_BUCKET=$(cat workflow_jobs.json | jq -r '.[] | select(.name=="deploy-infra") | .steps[] | select(.name | contains("Retrieve Secrets")) | .outputs["S3_BUCKET"] // empty')
+          S3_ENV_PATH=$(cat workflow_jobs.json | jq -r '.[] | select(.name=="deploy-infra") | .steps[] | select(.name | contains("Retrieve Secrets")) | .outputs["S3_ENV_PATH"] // empty')
+          echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
+          echo "S3_ENV_PATH=$S3_ENV_PATH" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check S3 bucket info
+        run: |
+          echo "S3 Bucket: $S3_BUCKET"
+          echo "S3 Env Path: $S3_ENV_PATH"
+          
+      - name: Download environment variables from S3
+        run: |
+          if [ -n "$S3_ENV_PATH" ]; then
+            aws s3 cp "$S3_ENV_PATH" ./amplify-env.json
+            echo "Downloaded environment variables from S3"
+          else
+            echo "No S3 environment path found. Creating minimal env file."
+            echo '{"NODE_ENV":"production"}' > ./amplify-env.json
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Amplify CLI
+        run: npm install -g @aws-amplify/cli
+
+      - name: Configure environment variables in Amplify
+        run: |
+          # Read environment variables from JSON file
+          cat amplify-env.json | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' > amplify.env
+          
+          # Loop through and set each environment variable in Amplify
+          cat amplify.env | while read -r line; do
+            KEY=$(echo "$line" | cut -d= -f1)
+            VALUE=$(echo "$line" | cut -d= -f2-)
+            # Set the environment variable in Amplify
+            echo "Setting $KEY in Amplify environment"
+            aws amplify update-app --app-id $AMPLIFY_APP_ID --environment-variables "$KEY=$VALUE"
+          done
+
+      - name: Publish to Amplify
+        run: |
+          echo "Publishing to Amplify with standalone Next.js build for API route support"
+          yarn amplify:publish
+        env:
+          AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
+          ENV_NAME: dev
+
+      - name: Cleanup S3 bucket
+        if: always()
+        run: |
+          if [ -n "$S3_BUCKET" ]; then
+            echo "Cleaning up S3 bucket: $S3_BUCKET"
+            aws s3 rm "s3://$S3_BUCKET" --recursive
+            aws s3 rb "s3://$S3_BUCKET"
+          else
+            echo "No S3 bucket to clean up"
+          fi

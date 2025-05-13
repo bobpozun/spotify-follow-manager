@@ -1,0 +1,22 @@
+{
+  "name": "spotify-follow-manager-infra",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval never",
+    "destroy": "cdk destroy --require-approval never"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-amplify-alpha": "^2.195.0-alpha.0",
+    "aws-cdk-lib": "^2.195.0",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.65.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
+  }
+}

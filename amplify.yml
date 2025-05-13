@@ -1,0 +1,62 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Disable SSM Parameter Store warnings
+        - 'export AMPLIFY_DISABLE_SSM=true'
+        # Install dependencies
+        - 'yarn install'
+        # Ensure AWS CLI has proper region
+        - 'export AWS_REGION=${AWS_REGION:-us-east-2}'
+        - 'echo "AWS Region: $AWS_REGION"'
+        # Print env info for debugging (excluding sensitive values)
+        - 'env | grep -v -E "SECRET|TOKEN|PASSWORD" | sort'
+    build:
+      commands:
+        # Explicitly set NODE_ENV for production
+        - 'export NODE_ENV=production'
+        # Skip Next.js linting in CI/CD
+        - 'echo "Amplify App ID: $AMPLIFY_APP_ID"'
+        # Build for standalone mode with linting skipped
+        - 'NEXTJS_SKIP_ESLINT=1 yarn build:standalone'
+        # Copy required-server-files.json to standalone directory
+        - 'cp -v .next/required-server-files.json .next/standalone/.next/ || echo "Warning: Could not copy required-server-files.json (not fatal)"'
+        # Create a simple wrapper for the Next.js server
+        - 'echo "#!/usr/bin/env node" > .next/standalone/server.js'
+        - 'echo "const { createServer } = require(\"http\");" >> .next/standalone/server.js'
+        - 'echo "const { parse } = require(\"url\");" >> .next/standalone/server.js'
+        - 'echo "const next = require(\"next\");" >> .next/standalone/server.js'
+        - 'echo "" >> .next/standalone/server.js'
+        - 'echo "const app = next({ dev: false, dir: \".\", conf: { distDir: \"./.next\" } });" >> .next/standalone/server.js'
+        - 'echo "const handle = app.getRequestHandler();" >> .next/standalone/server.js'
+        - 'echo "" >> .next/standalone/server.js'
+        - 'echo "app.prepare().then(() => {" >> .next/standalone/server.js'
+        - 'echo "  createServer((req, res) => {" >> .next/standalone/server.js'
+        - 'echo "    const parsedUrl = parse(req.url, true);" >> .next/standalone/server.js'
+        - 'echo "    handle(req, res, parsedUrl);" >> .next/standalone/server.js'
+        - 'echo "  }).listen(process.env.PORT || 3000, (err) => {" >> .next/standalone/server.js'
+        - 'echo "    if (err) throw err;" >> .next/standalone/server.js'
+        - 'echo "    console.log(\"Ready on port \" + (process.env.PORT || 3000));" >> .next/standalone/server.js'
+        - 'echo "  });" >> .next/standalone/server.js'
+        - 'echo "});" >> .next/standalone/server.js'
+        - 'chmod +x .next/standalone/server.js'
+  artifacts:
+    # Use standalone directory as base (contains self-contained Node.js server)
+    baseDirectory: .next/standalone
+    files:
+      - '**/*'
+    # Include the necessary static files as secondary artifacts
+    secondaryArtifacts:
+      - baseDirectory: .next/static
+        files:
+          - '**/*'
+        destination: .next/static
+      - baseDirectory: public
+        files:
+          - '**/*'
+        destination: public
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*

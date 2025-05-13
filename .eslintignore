@@ -1,0 +1,5 @@
+# Ignore infrastructure directory
+infrastructure/
+infrastructure/*
+node_modules/
+.next/
